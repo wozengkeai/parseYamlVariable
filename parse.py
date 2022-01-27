@@ -110,7 +110,7 @@ class ReadYamlRender:
         # ymlparsecontent.append(ymlcontent)
 
 
-        csv_varlen = len(csv_varname)
+        csv_varlen = len(csv_value)
         if csv_varlen > 0:
             for i in range(0,csv_varlen):
                 #备份yml内容进行内容替换
