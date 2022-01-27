@@ -1,15 +1,18 @@
 -
   name: 登陆企业平台公司
+  parameters:
+      username-pwd: ${P(logindata.csv)}
   request:
       headers:
-          Content-Type: application/json;charset=UTF-8
+          Content-Type: $username
           User-Agent: okhttp/4.2.2
           Authorization: ${read_yaml('extract.yaml','token')}
       json:
-          companyId: 382
+          companyId: $pwd
       method: POST
       url: /auth/anonymousLogin
   validate:
     - eq:
         - content.msg
         - ok
+

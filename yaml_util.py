@@ -7,7 +7,9 @@
 """
 
 # import os
+
 import json
+
 
 import yaml
 from pathlib import Path
@@ -24,8 +26,10 @@ def read_testcase_yaml(yaml_name):
         # value = yaml.load(f,Loader=yaml.FullLoader)
         value = f.read()
         value = ReadYamlRender().content_function(value)
-        value = yaml.load(value, Loader=yaml.FullLoader)
+        # value = yaml.load(value, Loader=yaml.FullLoader)
         return value
+
+
 
 
 

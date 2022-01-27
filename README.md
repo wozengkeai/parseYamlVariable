@@ -1,5 +1,5 @@
 # parseYamlVariable
-####在yml用例描述中实现函数/变量的定义和调用
+#### 在yml用例描述中实现函数/变量的定义和调用
 
 
 在Python语言中，函数的调用形式包含如下四种形式：
@@ -28,4 +28,18 @@ debugtalk.py          ---存放自定义函数的文件，其余py文件内的�
 
 yaml_util.py          ---读取用例并实现变量解析过程 
 
+#### 参数化
+在yml文件中增加parameters字段：
 
+`parameters:
+      username-pwd: ${P(logindata.csv)}`
+
+通过$+["parameterize", "P"]识别参数化读取csv文件内容。
+
+csv格式要求：
+
+①第一名必须为字段名，多个字段以","隔开；
+
+②第二行开始为各个字段的值，同样以","隔开；
+
+③引用的参数$var名称必须与csv中设置的一致；
