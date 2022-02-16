@@ -52,19 +52,50 @@ class ReadYamlRender:
         except TypeError:
             return []
 
+    def trans_func(self,funcnames,ymlcontent):
+        for func in funcnames:
+            try:
+                value = eval(func)  # 将字符串转为python的表达式，并输出结果
+            except NameError as error:
+                print(error)
+                continue
 
-    def content_function(self,ymlcontent):
+            func = "${" + func + "}"
+            if func == ymlcontent:
+                ymlcontent = value
+            else:
+                ymlcontent = ymlcontent.replace(func, str(value), 1)
+        return ymlcontent
+
+    def trans_var(self,ymlcontent):
+        varnames = self.extract_variables(ymlcontent)
+        for var in varnames:
+            try:
+                value = eval(var)
+                strvalue = str(value)
+            except Exception:
+                continue
+            var = "$" + var
+            if var == ymlcontent:
+                ymlcontent = strvalue
+            else:
+                ymlcontent = ymlcontent.replace(var, strvalue, 1)
+        return ymlcontent
+
+
+    def content_function(self):
         """
         渲染变量,输出转化后的值
         :return:
         """
         #获取yml文件内容
-        # ymlcontent = self.get_data('\\anonymousLogin.yml')
+        ymlcontent = self.get_data('\\anonymousLogin.yml')
 
         #获取函数变量 ['gen_random_string(1)', 'gen_random_string(2)']
         funcnames = self.extract_functions(ymlcontent)
         csv_varname = []
         csv_value = []
+
 
         for func in funcnames:
             funcname = func.split('(',1)
@@ -75,57 +106,72 @@ class ReadYamlRender:
                 #获取第一行字段名称，第二行开始是值
                 csv_varname = csv_content_list[0]
                 csv_value = csv_content_list[1:]
-            else:
-                try:
-                    value = eval(func)   #将字符串转为python的表达式，并输出结果
-                except NameError as error:
-                    print(error)
-                    continue
-
-                func = "${" + func + "}"
-                if func == ymlcontent:
-                    ymlcontent = value
-                else:
-                    ymlcontent = ymlcontent.replace(func,str(value),1)
+            # else:
+            #     try:
+            #         value = eval(func)   #将字符串转为python的表达式，并输出结果
+            #     except NameError as error:
+            #         print(error)
+            #         continue
+            #
+            #     func = "${" + func + "}"
+            #     if func == ymlcontent:
+            #         ymlcontent = value
+            #     else:
+            #         ymlcontent = ymlcontent.replace(func,str(value),1)
 
 
         #获取变量名
         varnames = self.extract_variables(ymlcontent)
-        for var in varnames:
-            try:
-                value = eval(var)
-                strvalue = str(value)
-            except Exception:
-                continue
-            # if strvalue.startswith('<') and strvalue.endswith('>'):
-            #     strvalue = 'do not find this varname'
-            var = "$" + var
-            if var == ymlcontent:
-                ymlcontent = strvalue
-            else:
-                ymlcontent = ymlcontent.replace(var,strvalue,1)
+        # for var in varnames:
+        #     try:
+        #         value = eval(var)
+        #         strvalue = str(value)
+        #     except Exception:
+        #         continue
+        #     var = "$" + var
+        #     if var == ymlcontent:
+        #         ymlcontent = strvalue
+        #     else:
+        #         ymlcontent = ymlcontent.replace(var,strvalue,1)
 
-        #转为yml格式
-        list2yml = yaml.load(ymlcontent,Loader=yaml.FullLoader)
-        # ymlparsecontent.append(ymlcontent)
-
-
+        # 转为yml格式
+        list2yml = yaml.load(ymlcontent, Loader=yaml.FullLoader)
         csv_varlen = len(csv_value)
         if csv_varlen > 0:
             for i in range(0,csv_varlen):
                 #备份yml内容进行内容替换
                 changecontent = ymlcontent
+                for func in funcnames:
+                    try:
+                        value = eval(func)   #将字符串转为python的表达式，并输出结果
+                    except NameError :
+                        continue
+                    func = "${" + func + "}"
+                    changecontent = changecontent.replace(func, value, 1)
+
                 for csv_var in varnames:
-                    value_index = csv_varname.index(csv_var)
-                    csv_var = "$" + csv_var
-                    changecontent = changecontent.replace(csv_var, csv_value[i][value_index], 1)
+                    if csv_var in csv_varname:
+                        value_index = csv_varname.index(csv_var)
+                        csv_var = "$" + csv_var
+                        changecontent = changecontent.replace(csv_var, csv_value[i][value_index], 1)
+                    else:
+                        try:
+                            value = eval(csv_var)
+                            strvalue = str(value)
+                        except Exception:
+                            continue
+                        csv_var = "$" + csv_var
+                        changecontent = changecontent.replace(csv_var, strvalue, 1)
                 if i == 0:
                     #第一次参数化不需要新增，而是覆盖之前的用例
                     list2yml = []
                 # ymlparsecontent.append(changecontent)
                 changecontentlist = yaml.load(changecontent,Loader=yaml.FullLoader)
                 list2yml.extend(changecontentlist)
-
+        else:
+            ymlcontent = self.trans_var(ymlcontent)
+            ymlcontent = self.trans_func(funcnames,ymlcontent)
+            list2yml = yaml.load(ymlcontent, Loader=yaml.FullLoader)
         pprint(list2yml)
         return list2yml
 
